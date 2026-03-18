@@ -1,0 +1,28 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { authService } from '@/services/auth.service';
+import { useAuthStore } from '@/store/authStore';
+import type { LoginInput } from '@/schemas/auth.schema';
+
+export function useLoginMutation() {
+  const { mode, setAccessToken, setUser } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: LoginInput) => authService.login(mode, data),
+    onSuccess: (res) => {
+      // V1: ❌ localStorage에 저장 (XSS 취약점 시연)
+      if (mode === 'v1' && res.accessToken) {
+        localStorage.setItem('v1_at', res.accessToken);
+      }
+      // V4: ✅ Zustand 메모리에 저장 (XSS 불가)
+      if (mode === 'v4' && res.accessToken) {
+        setAccessToken(res.accessToken);
+      }
+      if (res.user) {
+        setUser(res.user);
+      }
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+    throwOnError: false,
+  });
+}

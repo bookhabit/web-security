@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/QueryProvider";
-import { ErrorBoundary } from "@/components/common/error/ErrorBoundary";
-import { GlobalErrorFallback } from "@/components/common/error/GlobalErrorFallback";
+import { GlobalErrorBoundary } from "@/components/common/error/GlobalErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,13 +35,9 @@ export default function RootLayout({
             └─ QueryProvider       ← TanStack Query 컨텍스트
                  └─ children       ← 각 페이지 (PageAsyncBoundary는 페이지에서 사용)
         */}
-        <ErrorBoundary
-          fallback={(error, reset) => (
-            <GlobalErrorFallback error={error} reset={reset} />
-          )}
-        >
+        <GlobalErrorBoundary>
           <QueryProvider>{children}</QueryProvider>
-        </ErrorBoundary>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );
