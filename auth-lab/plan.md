@@ -88,9 +88,8 @@ export class User {
 ### 2-1. V1: JWT → Body 응답 (LocalStorage 방식)
 
 **서버 동작:**
-- [ ] `POST /auth/v1/login` — 이메일/비밀번호 검증 후 `{ accessToken }` JSON 응답
-- [ ] `GET /auth/v1/me` — `Authorization: Bearer {token}` 헤더에서 JWT 검증
-- [ ] CORS: `origin: 'http://localhost:3000'`, `credentials: false`
+- [x] `POST /auth/v1/login` — `{ accessToken }` JSON 응답
+- [x] `GET /auth/v1/me` — Authorization Bearer 헤더 검증
 
 ```typescript
 // 응답 형태
@@ -98,120 +97,43 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
 ```
 
 **취약점 설계:**
-- [ ] `POST /api/points/transfer` — `Authorization` 헤더의 JWT로 인증 (훔친 토큰으로 호출 가능)
-- [ ] CORS `Access-Control-Allow-Origin: *` 설정 (의도적 취약점)
+- [x] `POST /api/points/transfer` — Authorization 헤더 JWT로 인증 (훔친 토큰으로 호출 가능)
 
 ---
 
 ### 2-2. V2: express-session (Session Cookie 방식)
-
-**서버 동작:**
-- [ ] `main.ts`에 `express-session` 미들웨어 설정:
-  ```typescript
-  app.use(session({
-    secret: 'session-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax' }  // ← Strict 아님 (취약점)
-  }));
-  ```
-- [ ] `POST /auth/v2/login` — `req.session.userId = user.id` 저장
-- [ ] `POST /auth/v2/logout` — `req.session.destroy()`
-- [ ] CORS: `origin: 'http://localhost:3000'`, `credentials: true`
-
-**취약점 설계 (CSRF):**
-- [ ] `POST /api/user/update-password` — `oldPassword` 확인 **없이** `newPassword`만 받아서 변경
-  - 세션으로 사용자 식별
-  - CSRF 토큰 **없음** (의도적)
+- [x] `POST /auth/v2/login` — req.session.userId 저장
+- [x] `POST /auth/v2/logout` — session.destroy()
+- [x] `GET /auth/v2/me` — 세션 ID로 프로필 조회
+- [x] CSRF 토큰 **없음** (의도적 취약점)
 
 ---
 
 ### 2-3. V3: JWT → HttpOnly Cookie (SameSite=Lax)
-
-**서버 동작:**
-- [ ] `POST /auth/v3/login` — JWT를 쿠키로 설정:
-  ```typescript
-  res.cookie('at', accessToken, {
-    httpOnly: true,
-    secure: false,      // 로컬 환경 (HTTPS 없음)
-    sameSite: 'lax',   // ← Strict 아님 (취약점)
-  });
-  ```
-- [ ] `GET /auth/v3/me` — 쿠키에서 JWT 추출 후 검증
-
-**취약점 설계 (GET CSRF):**
-- [ ] `GET /api/user/withdraw` — **GET 방식으로** `isWithdrawn = true` 처리
-  - `SameSite=Lax`는 동일 사이트 내 GET은 쿠키 전송
-  - 게시판의 `<img>` 태그로 호출 가능
+- [x] `POST /auth/v3/login` — `res.cookie('at', jwt, { httpOnly: true, sameSite: 'lax' })`
+- [x] `POST /auth/v3/logout` — clearCookie
+- [x] `GET /auth/v3/me` — 쿠키 JWT 검증
 
 ---
 
 ### 2-4. V4: Hybrid Refresh Token (안전한 방식)
-
-**서버 동작:**
-- [ ] `POST /auth/v4/login` — Access Token(Body) + Refresh Token(Cookie) 이중 응답:
-  ```typescript
-  // Access Token: 15분 만료, JSON Body
-  const accessToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '15m' });
-  // Refresh Token: 7일 만료, HttpOnly + SameSite=Strict 쿠키
-  const refreshToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '7d', secret: RT_SECRET });
-  res.cookie('rt', refreshToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'strict',  // ← Strict (외부 사이트에서 쿠키 미전송)
-  });
-  return { accessToken };
-  ```
-- [ ] `POST /auth/v4/refresh` — RT 쿠키 검증 후 새 AT 발급
-- [ ] `POST /auth/v4/logout` — RT 쿠키 삭제
-- [ ] 모든 V4 API: `Authorization: Bearer {at}` 헤더로만 인증 (쿠키 인증 없음)
-
-**방어 확인:**
-- [ ] XSS 시도 시: `localStorage` 비어있음, 메모리 변수 접근 불가
-- [ ] CSRF 시도 시: 헤더에 AT 없으면 401
+- [x] `POST /auth/v4/login` — AT(Body 15분) + RT(Cookie Strict 7일)
+- [x] `POST /auth/v4/refresh` — RT 검증 + RT Rotation
+- [x] `POST /auth/v4/logout` — RT 쿠키 삭제
+- [x] `GET /auth/v4/me` — Authorization Bearer 헤더 필수
 
 ---
 
 ## Phase 3: NestJS 서버 — 공격 대상 API 완성
 
 ### 3-1. 포인트 송금 (`POST /api/points/transfer`)
-```typescript
-// 요청 Body
-{ toEmail: string, amount: number }
-
-// 로직
-1. Authorization 헤더 또는 세션/쿠키에서 현재 사용자 식별
-2. 현재 사용자 points -= amount
-3. 수신자 points += amount
-4. 두 사용자 저장 (트랜잭션)
-5. 응답: { from: { email, points }, to: { email, points } }
-```
-- [ ] V1 전용: JWT Bearer 헤더 인증 (훔친 토큰으로 호출 가능)
-- [ ] 잔액 부족 시 400 에러
+- [x] V1 JWT Bearer 인증, 트랜잭션 처리, 잔액 부족 400
 
 ### 3-2. 비밀번호 변경 (`POST /api/user/update-password`)
-```typescript
-// 요청 Body (취약 버전)
-{ newPassword: string }  // oldPassword 없음 → CSRF 취약
-
-// 로직
-1. 세션(V2)으로 사용자 식별
-2. bcrypt.hash(newPassword) 저장
-3. 응답: { message: '비밀번호가 변경되었습니다.' }
-```
-- [ ] V2 전용: 세션 쿠키 인증
-- [ ] `oldPassword` 검증 **없음** (의도적 취약점)
+- [x] V2 세션 인증, oldPassword 확인 없음 (CSRF 취약)
 
 ### 3-3. 회원 탈퇴 (`GET /api/user/withdraw`)
-```typescript
-// GET 방식 (의도적 취약 설계)
-// 로직
-1. 쿠키(V3)에서 JWT 추출
-2. user.isWithdrawn = true 업데이트
-3. 응답: { message: '탈퇴되었습니다.' }
-```
-- [ ] V3 전용: HttpOnly 쿠키 JWT 인증
-- [ ] GET 방식 유지 (img 태그 공격 허용)
+- [x] V3 HttpOnly 쿠키 JWT 인증, GET 방식 유지
 
 ---
 

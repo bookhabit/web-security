@@ -7,6 +7,10 @@ import { SeedService } from './seed/seed.service';
 import { PostsModule } from './modules/posts/posts.module';
 import { PointsModule } from './modules/points/points.module';
 import { UsersModule } from './modules/users/users.module';
+import { AuthV1Module } from './auth/v1/auth-v1.module';
+import { AuthV2Module } from './auth/v2/auth-v2.module';
+import { AuthV3Module } from './auth/v3/auth-v3.module';
+import { AuthV4Module } from './auth/v4/auth-v4.module';
 
 @Module({
   imports: [
@@ -37,6 +41,12 @@ import { UsersModule } from './modules/users/users.module';
     PostsModule,
     PointsModule,
     UsersModule,
+
+    // ── 인증 모듈 (v1~v4) ────────────────────────────────────────
+    AuthV1Module,
+    AuthV2Module,
+    AuthV3Module,
+    AuthV4Module,
   ],
   providers: [SeedService],
 })
