@@ -12,7 +12,7 @@ export function useLoginMutation() {
     onSuccess: (res) => {
       // V1: ❌ localStorage에 저장 (XSS 취약점 시연)
       if (mode === 'v1' && res.accessToken) {
-        localStorage.setItem('v1_at', res.accessToken);
+        localStorage.setItem('at', res.accessToken); // 'at' — XSS 페이로드와 동일한 키
       }
       // V4: ✅ Zustand 메모리에 저장 (XSS 불가)
       if (mode === 'v4' && res.accessToken) {

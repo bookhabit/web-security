@@ -33,7 +33,7 @@ export function Navbar() {
     try {
       await authService.logout(mode);
     } catch {}
-    if (mode === 'v1') localStorage.removeItem('v1_at');
+    if (mode === 'v1') localStorage.removeItem('at');
     logout();
     router.push('/login');
   };
@@ -89,6 +89,16 @@ export function Navbar() {
               }`}
             >
               게시글
+            </Link>
+            <Link
+              href="/attack"
+              className={`text-sm font-medium ${
+                pathname === '/attack'
+                  ? 'text-red-600'
+                  : 'text-red-400 hover:text-red-600'
+              }`}
+            >
+              공격 도구
             </Link>
           </div>
 

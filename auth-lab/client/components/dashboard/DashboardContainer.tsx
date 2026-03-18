@@ -17,7 +17,7 @@ export function DashboardContainer() {
   // V1 localStorage 토큰 읽기
   useEffect(() => {
     if (mode === 'v1') {
-      setV1Token(localStorage.getItem('v1_at'));
+      setV1Token(localStorage.getItem('at'));
     }
   }, [mode]);
 

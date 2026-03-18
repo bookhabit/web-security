@@ -10,12 +10,12 @@ export const baseClient = createPublicApi(BASE_URL);
 // V1: AT를 localStorage에서 읽음 (❌ XSS 취약)
 export const v1PrivateClient = createPrivateApi(
   BASE_URL,
-  () => (typeof window !== 'undefined' ? localStorage.getItem('v1_at') : null),
+  () => (typeof window !== 'undefined' ? localStorage.getItem('at') : null),
   async () => {
     throw new Error('V1은 refresh를 지원하지 않습니다. 다시 로그인해주세요.');
   },
   () => {
-    if (typeof window !== 'undefined') localStorage.removeItem('v1_at');
+    if (typeof window !== 'undefined') localStorage.removeItem('at');
     useAuthStore.getState().logout();
   },
 );

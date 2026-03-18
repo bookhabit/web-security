@@ -1,0 +1,10 @@
+{
+  "name": "auth-lab-hacker",
+  "version": "1.0.0",
+  "description": "Auth-Lab 공격 도구 모음",
+  "scripts": {
+    "xss": "node xss-receiver.js",
+    "serve": "node server.js",
+    "all": "node xss-receiver.js & node server.js"
+  }
+}
