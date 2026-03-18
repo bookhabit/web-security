@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>[취약] DOM XSS - eval()</title>
+  <style>
+    body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; }
+    .vuln { background: #ffe0e0; border: 2px solid #c00; padding: 10px; border-radius: 4px; }
+    .box { background: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    code { background: #eee; padding: 2px 6px; }
+    textarea { width: 80%; height: 60px; font-family: monospace; }
+    button { padding: 6px 14px; cursor: pointer; display: block; margin-top: 6px; }
+    #result { padding: 10px; border: 1px solid #ccc; margin-top: 10px; min-height: 30px; }
+  </style>
+</head>
+<body>
+  <h2>[취약] DOM XSS - eval()</h2>
+  <div class="vuln">⚠️ 이 페이지는 의도적으로 취약하게 만들어진 학습용 앱입니다.</div>
+
+  <div class="box">
+    <h3>시나리오</h3>
+    <p>URL 파라미터 <code>?expr=</code> 값을 eval()로 실행합니다.</p>
+    <p>취약 코드: <code>eval(params.get('expr'))</code></p>
+    <p><strong>eval()은 문자열을 JavaScript 코드로 직접 실행합니다.</strong></p>
+  </div>
+
+  <h3>실시간 테스트</h3>
+  <textarea id="exprField" placeholder="실행할 JS 코드를 입력하세요. 예: 2 + 2"></textarea>
+  <button onclick="runEval()">eval() 실행</button>
+  <div id="result">결과가 여기에 나옵니다</div>
+
+  <div class="box">
+    <h3>공격 페이로드 예시</h3>
+    <ul>
+      <li><code>alert(document.domain)</code></li>
+      <li><code>alert(document.cookie)</code></li>
+      <li><code>document.body.innerHTML='<h1>Hacked</h1>'</code></li>
+      <li>URL로 시도: <code>eval.html?expr=alert(document.domain)</code></li>
+    </ul>
+    <p><strong>왜 위험한가?</strong> eval()은 임의의 JS를 실행하므로 공격자가 어떤 코드든 실행 가능합니다.</p>
+  </div>
+
+  <script>
+    // 취약점: URL 파라미터를 eval()로 직접 실행
+    const params = new URLSearchParams(location.search);
+    const expr = params.get('expr');
+    if (expr) {
+      // ❌ 취약: 사용자 입력을 코드로 실행
+      const result = eval(expr);
+      document.getElementById('result').textContent = '결과: ' + result;
+    }
+
+    function runEval() {
+      const code = document.getElementById('exprField').value;
+      try {
+        // ❌ 취약: 사용자 입력을 그대로 eval 실행
+        const result = eval(code);
+        document.getElementById('result').textContent = '결과: ' + result;
+      } catch (e) {
+        document.getElementById('result').textContent = '에러: ' + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

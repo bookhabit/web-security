@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>[취약] DOM XSS - document.write()</title>
+    <style>
+      body {
+        font-family: monospace;
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+      }
+      .vuln {
+        background: #ffe0e0;
+        border: 2px solid #c00;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .box {
+        background: #f5f5f5;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+      }
+      code {
+        background: #eee;
+        padding: 2px 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>[취약] DOM XSS - document.write()</h2>
+    <div class="vuln">
+      ⚠️ 이 페이지는 의도적으로 취약하게 만들어진 학습용 앱입니다.
+    </div>
+
+    <div class="box">
+      <h3>시나리오</h3>
+      <p>
+        URL 파라미터 <code>?q=</code> 값을 document.write()로 HTML에 직접
+        씁니다.
+      </p>
+      <p>
+        취약 코드 (xss.md 예시):
+        <code
+          >document.write("&lt;p&gt;URL: " + document.location +
+          "&lt;/p&gt;")</code
+        >
+      </p>
+    </div>
+
+    <div class="box">
+      <h3>공격 페이로드 예시</h3>
+      <ul>
+        <li>
+          URL:
+          <code>document_write.html?q=&lt;img src=x onerror=alert(1)&gt;</code>
+        </li>
+        <li>
+          URL:
+          <code
+            >document_write.html?q=&lt;script&gt;alert(document.domain)&lt;/script&gt;</code
+          >
+        </li>
+      </ul>
+      <p>location 전체를 write할 때도 취약: URL에 fragment 조작</p>
+    </div>
+
+    <hr />
+    <h3>검색 결과:</h3>
+
+    <script>
+      // xss.md의 예시 코드 - document.location을 그대로 write
+      // ❌ 취약: document.location 전체를 HTML로 출력
+      document.write("<p>현재 URL: " + document.location + "</p>");
+
+      // ❌ 취약: URL 파라미터를 document.write로 출력
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q");
+      if (q) {
+        document.write("<p>검색어: " + q + "</p>");
+      }
+    </script>
+  </body>
+</html>

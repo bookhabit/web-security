@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>[취약] DOM XSS - innerHTML</title>
+  <style>
+    body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; }
+    .vuln { background: #ffe0e0; border: 2px solid #c00; padding: 10px; border-radius: 4px; }
+    .box { background: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    code { background: #eee; padding: 2px 6px; }
+    input { width: 80%; padding: 6px; }
+    button { padding: 6px 14px; cursor: pointer; }
+    #output { min-height: 40px; padding: 10px; border: 1px solid #ccc; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>[취약] DOM XSS - innerHTML</h2>
+  <div class="vuln">⚠️ 이 페이지는 의도적으로 취약하게 만들어진 학습용 앱입니다.</div>
+
+  <div class="box">
+    <h3>시나리오</h3>
+    <p>URL 파라미터 <code>?name=</code> 값을 innerHTML로 직접 삽입합니다.</p>
+    <p>취약 코드: <code>output.innerHTML = params.get('name')</code></p>
+  </div>
+
+  <h3>실시간 테스트</h3>
+  <input type="text" id="inputField" placeholder="이름을 입력하세요 (또는 URL ?name= 파라미터 사용)" />
+  <button onclick="render()">출력</button>
+  <div id="output">여기에 출력됩니다</div>
+
+  <div class="box">
+    <h3>공격 페이로드 예시</h3>
+    <ul>
+      <li><code>&lt;script&gt;alert(document.domain)&lt;/script&gt;</code></li>
+      <li><code>&lt;img src=x onerror=alert(document.cookie)&gt;</code></li>
+      <li><code>&lt;svg onload=alert(1)&gt;</code></li>
+      <li><code>&lt;a href="javascript:alert(1)"&gt;클릭&lt;/a&gt;</code></li>
+    </ul>
+    <p>URL로 시도: <code>innerHTML.html?name=&lt;img src=x onerror=alert(1)&gt;</code></p>
+  </div>
+
+  <script>
+    // 취약점: URL 파라미터를 innerHTML에 직접 삽입
+    const params = new URLSearchParams(location.search);
+    const nameParam = params.get('name');
+    if (nameParam) {
+      // ❌ 취약: 사용자 입력을 HTML로 직접 파싱
+      document.getElementById('output').innerHTML = nameParam;
+    }
+
+    function render() {
+      const input = document.getElementById('inputField').value;
+      // ❌ 취약: 사용자 입력을 그대로 innerHTML에 삽입
+      document.getElementById('output').innerHTML = input;
+    }
+  </script>
+</body>
+</html>

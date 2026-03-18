@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>[안전] Stored XSS 방어 - 방명록 (Vanilla JS)</title>
+  <style>
+    body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; }
+    .safe { background: #e0ffe0; border: 2px solid #090; padding: 10px; border-radius: 4px; }
+    .box { background: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .bad { background: #ffe0e0; padding: 10px; border-radius: 4px; font-size: 0.85em; }
+    .good { background: #e0ffe0; padding: 10px; border-radius: 4px; font-size: 0.85em; }
+    code { background: #eee; padding: 2px 6px; display: block; margin: 3px 0; }
+    input, textarea { width: 100%; padding: 6px; box-sizing: border-box; margin: 4px 0; font-family: monospace; }
+    textarea { height: 60px; }
+    button { padding: 8px 20px; cursor: pointer; margin: 4px 2px; }
+    .entry { border: 1px solid #ccc; padding: 10px; margin: 8px 0; background: white; }
+    .entry .name { font-weight: bold; }
+    .entry .time { color: #999; font-size: 0.8em; }
+    button.danger { background: #666; color: white; border: none; padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <h2>[안전] Stored XSS 방어 - 방명록 (Vanilla JS)</h2>
+  <div class="safe">✅ createElement + textContent를 사용한 안전한 버전입니다.</div>
+
+  <div class="box">
+    <div class="compare">
+      <div class="bad">
+        <strong>❌ 취약 (guestbook.html)</strong>
+        <code>div.innerHTML = `</code>
+        <code>&nbsp;&lt;div&gt;${entry.name}&lt;/div&gt;</code>
+        <code>&nbsp;&lt;div&gt;${entry.message}&lt;/div&gt;</code>
+        <code>`</code>
+      </div>
+      <div class="good">
+        <strong>✅ 안전 (이 파일)</strong>
+        <code>const nameEl = document.createElement('div');</code>
+        <code>nameEl.textContent = entry.name;</code>
+        <code>const msgEl = document.createElement('div');</code>
+        <code>msgEl.textContent = entry.message;</code>
+      </div>
+    </div>
+  </div>
+
+  <h3>방명록 작성 (XSS 페이로드를 입력해도 안전합니다)</h3>
+  <label>이름:</label>
+  <input type="text" id="nameInput" placeholder="<script>alert(1)</script> 를 입력해보세요">
+  <label>메시지:</label>
+  <textarea id="msgInput" placeholder="<img src=x onerror=alert(1)> 를 입력해보세요"></textarea>
+  <button onclick="addEntry()">등록</button>
+  <button class="danger" onclick="clearAll()">전체 삭제</button>
+
+  <h3>방명록 목록</h3>
+  <div id="entries"></div>
+
+  <script>
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML; // 안전한 이스케이프
+    }
+
+    function loadEntries() {
+      const entries = JSON.parse(localStorage.getItem('guestbook_safe') || '[]');
+      const container = document.getElementById('entries');
+      container.innerHTML = '';
+
+      entries.forEach(function(entry) {
+        const div = document.createElement('div');
+        div.className = 'entry';
+
+        // ✅ 안전: createElement + textContent 사용
+        const nameEl = document.createElement('div');
+        nameEl.className = 'name';
+        nameEl.textContent = entry.name; // HTML로 파싱되지 않음
+
+        const msgEl = document.createElement('div');
+        msgEl.className = 'message';
+        msgEl.textContent = entry.message; // HTML로 파싱되지 않음
+
+        const timeEl = document.createElement('div');
+        timeEl.className = 'time';
+        timeEl.textContent = entry.time;
+
+        div.appendChild(nameEl);
+        div.appendChild(msgEl);
+        div.appendChild(timeEl);
+        container.appendChild(div);
+      });
+    }
+
+    function addEntry() {
+      const name = document.getElementById('nameInput').value;
+      const message = document.getElementById('msgInput').value;
+      if (!name || !message) return alert('이름과 메시지를 입력하세요.');
+
+      const entries = JSON.parse(localStorage.getItem('guestbook_safe') || '[]');
+      entries.push({ name, message, time: new Date().toLocaleString() });
+      localStorage.setItem('guestbook_safe', JSON.stringify(entries));
+      loadEntries();
+      document.getElementById('nameInput').value = '';
+      document.getElementById('msgInput').value = '';
+    }
+
+    function clearAll() {
+      if (confirm('모든 방명록을 삭제하시겠습니까?')) {
+        localStorage.removeItem('guestbook_safe');
+        loadEntries();
+      }
+    }
+
+    loadEntries();
+  </script>
+</body>
+</html>

