@@ -16,7 +16,7 @@ export const loginResponseSchema = z.object({
     .object({
       id: z.string(),
       email: z.string(),
-      points: z.number(),
+      points: z.number().optional(), // V2는 points를 반환하지 않음
     })
     .optional(),
   message: z.string().optional(),
